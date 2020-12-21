@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StreamTokenizer;
 import java.util.Arrays;
+import java.util.HashMap;
+
 import problems.Evaluator;
 import solutions.Solution;
 
@@ -22,10 +24,12 @@ public class PAP implements Evaluator<Integer> {
 	 */
 	public final Double[] variables;
 
-	/**
-	 * The matrix A of coefficients for the PAP f(x) = x'.A.x
-	 */
-	public Double[][] A;
+
+	public HashMap<String,Integer> values;
+	public Integer[] hd;
+	public Integer[][] apd;
+	public Integer[][] rpt;
+
 
 	/**
 	 * The constructor for QuadracticBinaryFunction class. The filename of the
@@ -74,8 +78,8 @@ public class PAP implements Evaluator<Integer> {
 	 * {@inheritDoc} In the case of a PAP, the evaluation correspond to
 	 * computing a matrix multiplication x'.A.x. A better way to evaluate this
 	 * function when at most two variables are modified is given by methods
-	 * {@link #evaluateInsertionQBF(int)}, {@link #evaluateRemovalQBF(int)} and
-	 * {@link #evaluateExchangeQBF(int,int)}.
+	 * {@link #evaluateInsertionPAP(int)}, {@link #evaluateRemovalPAP(int)} and
+	 * {@link #evaluateExchangePAP(int,int)}.
 	 * 
 	 * @return The evaluation of the PAP.
 	 */
@@ -83,7 +87,7 @@ public class PAP implements Evaluator<Integer> {
 	public Double evaluate(Solution<Integer> sol) {
 
 		setVariables(sol);
-		return sol.cost = evaluateQBF();
+		return sol.cost = evaluatePAP();
 
 	}
 
@@ -93,14 +97,14 @@ public class PAP implements Evaluator<Integer> {
 	 * 
 	 * @return The value of the PAP.
 	 */
-	public Double evaluateQBF() {
+	public Double evaluatePAP() {
 
 		Double aux = (double) 0, sum = (double) 0;
 		Double vecAux[] = new Double[size];
 
 		for (int i = 0; i < size; i++) {
 			for (int j = 0; j < size; j++) {
-				aux += variables[j] * A[i][j];
+				aux += variables[j] * apd[i][j];
 			}
 			vecAux[i] = aux;
 			sum += aux * variables[i];
@@ -121,7 +125,7 @@ public class PAP implements Evaluator<Integer> {
 	public Double evaluateInsertionCost(Integer elem, Solution<Integer> sol) {
 
 		setVariables(sol);
-		return evaluateInsertionQBF(elem);
+		return evaluateInsertionPAP(elem);
 
 	}
 
@@ -134,12 +138,12 @@ public class PAP implements Evaluator<Integer> {
 	 * @return The variation of the objective function resulting from the
 	 *         insertion.
 	 */
-	public Double evaluateInsertionQBF(int i) {
+	public Double evaluateInsertionPAP(int i) {
 
 		if (variables[i] == 1)
 			return 0.0;
 
-		return evaluateContributionQBF(i);
+		return evaluateContributionPAP(i);
 	}
 
 	/*
@@ -152,7 +156,7 @@ public class PAP implements Evaluator<Integer> {
 	public Double evaluateRemovalCost(Integer elem, Solution<Integer> sol) {
 
 		setVariables(sol);
-		return evaluateRemovalQBF(elem);
+		return evaluateRemovalPAP(elem);
 
 	}
 
@@ -165,12 +169,12 @@ public class PAP implements Evaluator<Integer> {
 	 * @return The variation of the objective function resulting from the
 	 *         removal.
 	 */
-	public Double evaluateRemovalQBF(int i) {
+	public Double evaluateRemovalPAP(int i) {
 
 		if (variables[i] == 0)
 			return 0.0;
 
-		return -evaluateContributionQBF(i);
+		return -evaluateContributionPAP(i);
 
 	}
 
@@ -184,7 +188,7 @@ public class PAP implements Evaluator<Integer> {
 	public Double evaluateExchangeCost(Integer elemIn, Integer elemOut, Solution<Integer> sol) {
 
 		setVariables(sol);
-		return evaluateExchangeQBF(elemIn, elemOut);
+		return evaluateExchangePAP(elemIn, elemOut);
 
 	}
 
@@ -201,20 +205,20 @@ public class PAP implements Evaluator<Integer> {
 	 * @return The variation of the objective function resulting from the
 	 *         exchange.
 	 */
-	public Double evaluateExchangeQBF(int in, int out) {
+	public Double evaluateExchangePAP(int in, int out) {
 
 		Double sum = 0.0;
 
 		if (in == out)
 			return 0.0;
 		if (variables[in] == 1)
-			return evaluateRemovalQBF(out);
+			return evaluateRemovalPAP(out);
 		if (variables[out] == 0)
-			return evaluateInsertionQBF(in);
+			return evaluateInsertionPAP(in);
 
-		sum += evaluateContributionQBF(in);
-		sum -= evaluateContributionQBF(out);
-		sum -= (A[in][out] + A[out][in]);
+		sum += evaluateContributionPAP(in);
+		sum -= evaluateContributionPAP(out);
+		sum -= (apd[in][out] + apd[out][in]);
 
 		return sum;
 	}
@@ -224,7 +228,7 @@ public class PAP implements Evaluator<Integer> {
 	 * insertion of an element. This method is faster than evaluating the whole
 	 * solution, since it uses the fact that only one line and one column from
 	 * matrix A needs to be evaluated when inserting a new element into the
-	 * solution. This method is different from {@link #evaluateInsertionQBF(int)},
+	 * solution. This method is different from {@link #evaluateInsertionPAP(int)},
 	 * since it disregards the fact that the element might already be in the
 	 * solution.
 	 * 
@@ -233,15 +237,15 @@ public class PAP implements Evaluator<Integer> {
 	 * @return the variation of the objective function resulting from the
 	 *         insertion.
 	 */
-	private Double evaluateContributionQBF(int i) {
+	private Double evaluateContributionPAP(int i) {
 
 		Double sum = 0.0;
 
 		for (int j = 0; j < size; j++) {
 			if (i != j)
-				sum += variables[j] * (A[i][j] + A[j][i]);
+				sum += variables[j] * (apd[i][j] + apd[j][i]);
 		}
-		sum += A[i][i];
+		sum += apd[i][i];
 
 		return sum;
 	}
@@ -249,7 +253,7 @@ public class PAP implements Evaluator<Integer> {
 	/**
 	 * Responsible for setting the PAP function parameters by reading the
 	 * necessary input from an external file. This method reads the domain's
-	 * dimension and matrix {@link #A}.
+	 * dimension and matrix {@link #apd}.
 	 * 
 	 * @param filename
 	 *            Name of the file containing the input for setting the black
@@ -263,20 +267,48 @@ public class PAP implements Evaluator<Integer> {
 		Reader fileInst = new BufferedReader(new FileReader(filename));
 		StreamTokenizer stok = new StreamTokenizer(fileInst);
 
-		stok.nextToken();
-		Integer _size = (int) stok.nval;
-		A = new Double[_size][_size];
+		values = new HashMap<>();
 
-		for (int i = 0; i < _size; i++) {
-			for (int j = i; j < _size; j++) {
+		String[] keys = {"P", "D", "T", "S", "H"};
+		stok.nextToken();
+		for (String k:keys) {
+			stok.nextToken();
+			values.put(k, (int)stok.nval);
+			stok.nextToken();
+		}
+
+		int p = values.get("P");
+		int t = values.get("T");
+
+		//HD
+		stok.nextToken();
+		hd = new Integer[p];
+		for(int i = 0; i < values.get("P"); i++){
+			stok.nextToken();
+			hd[i] = (int)stok.nval;
+		}
+
+		//APD
+		stok.nextToken();
+		apd = new Integer[p][p];
+		for(int i = 0; i < p; i++){
+			for(int j = 0; j < p; j++){
 				stok.nextToken();
-				A[i][j] = stok.nval;
-				if (j>i)
-					A[j][i] = 0.0;
+				apd[i][j] = (int)stok.nval;
 			}
 		}
 
-		return _size;
+		//RPT
+		stok.nextToken();
+		rpt = new Integer[p][t];
+		for(int i = 0; i < p; i++){
+			for(int j = 0; j < t; j++){
+				stok.nextToken();
+				rpt[i][j] = (int)stok.nval;
+			}
+		}
+
+		return p;
 
 	}
 
@@ -299,13 +331,13 @@ public class PAP implements Evaluator<Integer> {
 	}
 
 	/**
-	 * Prints matrix {@link #A}.
+	 * Prints matrix {@link #apd}.
 	 */
 	public void printMatrix() {
 
 		for (int i = 0; i < size; i++) {
 			for (int j = i; j < size; j++) {
-				System.out.print(A[i][j] + " ");
+				System.out.print(apd[i][j] + " ");
 			}
 			System.out.println();
 		}

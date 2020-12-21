@@ -15,10 +15,12 @@ public class GRASP_PAP_Executor {
 	public static void main(String[] args) throws IOException {
 		
 		// Params
-		String[] instances = {"P50D50S1.pap", "P50D50S3.pap", "P50D50S5.pap",
-				"P70D70S1.pap", "P70D70S3.pap", "P70D70S5.pap", "P70D100S6.pap",
-				"P70D100S8.pap", "P70D100S10.pap", "P100D150S10.pap",
-				"P100D150S15.pap", "P100D150S20.pap"};
+		String[] instances = {
+				"P50D50S1.pap", "P50D50S3.pap", "P50D50S5.pap",
+				"P70D70S1.pap", "P70D70S3.pap", "P70D70S5.pap",
+				"P70D100S6.pap", "P70D100S8.pap", "P70D100S10.pap",
+				"P100D150S10.pap", "P100D150S15.pap", "P100D150S20.pap"
+		};
 		Double[] alphas = {0.1, 0.5, 0.9};
 		Integer iterations = 1000;
 		
@@ -49,7 +51,7 @@ public class GRASP_PAP_Executor {
 		
 		
 		for (String instance : instances) {
-			FileWriter fileWriter = new FileWriter("results/" + instance + ".txt");
+			FileWriter fileWriter = new FileWriter("GRASP/results/" + instance + ".txt");
 			
 			for (Double alpha : alphas) {
 				for (Experiment experiment: experiments) {
@@ -57,7 +59,7 @@ public class GRASP_PAP_Executor {
 						String expName = "ALPHA=" + alpha + "_" + experiment.getKey();
 						System.out.println("\n\nINSTANCE:" + instance + "\tRUNNING EXPERIMENT: " + expName + "\n");
 
-						GRASP_PAP grasp_pap = new GRASP_PAP(alpha, iterations, "../instances/" + instance, 
+						GRASP_PAP grasp_pap = new GRASP_PAP(alpha, iterations, "instances/" + instance,
 								experiment.getLocalSearchType(), experiment.getConstructiveHeuristicType(),
 								experiment.getPerctRandomPlus());
 						GRASP_PAP_Executor.executeInstance(expName, grasp_pap, fileWriter);

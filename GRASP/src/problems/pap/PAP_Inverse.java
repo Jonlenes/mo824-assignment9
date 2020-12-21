@@ -23,32 +23,32 @@ public class PAP_Inverse extends PAP {
 	 * @see problems.pap.PAP#evaluate()
 	 */
 	@Override
-	public Double evaluateQBF() {
-		return -super.evaluateQBF();
+	public Double evaluatePAP() {
+		return -super.evaluatePAP();
 	}
 	
 	/* (non-Javadoc)
 	 * @see problems.pap.PAP#evaluateInsertion(int)
 	 */
 	@Override
-	public Double evaluateInsertionQBF(int i) {	
-		return -super.evaluateInsertionQBF(i);
+	public Double evaluateInsertionPAP(int i) {	
+		return -super.evaluateInsertionPAP(i);
 	}
 	
 	/* (non-Javadoc)
 	 * @see problems.pap.PAP#evaluateRemoval(int)
 	 */
 	@Override
-	public Double evaluateRemovalQBF(int i) {
-		return -super.evaluateRemovalQBF(i);
+	public Double evaluateRemovalPAP(int i) {
+		return -super.evaluateRemovalPAP(i);
 	}
 	
 	/* (non-Javadoc)
 	 * @see problems.pap.PAP#evaluateExchange(int, int)
 	 */
 	@Override
-	public Double evaluateExchangeQBF(int in, int out) {
-		return -super.evaluateExchangeQBF(in,out);
+	public Double evaluateExchangePAP(int in, int out) {
+		return -super.evaluateExchangePAP(in,out);
 	}
 
 }
