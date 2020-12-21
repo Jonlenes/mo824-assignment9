@@ -37,5 +37,6 @@ def instance_names(folder='instances'):
 	return sorted(names, key=cmp)
 
 if __name__ == "__main__":
+	print(instance_names())
 	for instance in instance_names():
 		print(read_input(f'instances/{instance}'))
