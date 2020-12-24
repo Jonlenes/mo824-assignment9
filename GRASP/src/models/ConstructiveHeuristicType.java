@@ -1,5 +1,5 @@
 package models;
 
 public enum ConstructiveHeuristicType {
-	DEFAULT, REACTIVE_GRASP, RANDOM_PLUS
+	DEFAULT, RANDOM_PLUS
 }

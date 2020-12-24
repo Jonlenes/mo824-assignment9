@@ -217,14 +217,8 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 
 	@Override
 	public Solution<Integer> constructiveHeuristic() {
-		if(this.constructionType.equals(ConstructiveHeuristicType.RANDOM_PLUS)) {
+		if(this.constructionType.equals(ConstructiveHeuristicType.RANDOM_PLUS))
 			return this.randomPlusConstructionConstructiveHeuristic();
-		}
-		
-		if(this.constructionType.equals(ConstructiveHeuristicType.REACTIVE_GRASP)) {
-			return this.reactiveGraspConstructiveHeuristic();
-		}
-		
 		return this.defaultConstructiveHeuristic();
 	}
 	
@@ -290,107 +284,7 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 	
 	@Override
 	public Solution<Integer> solve() {
-		if(this.constructionType.equals(ConstructiveHeuristicType.REACTIVE_GRASP)){
-			return this.solveReactiveGrasp();
-		}else {
-			return super.solve();
-		}
-	}
-	
-	public Solution<Integer> solveReactiveGrasp() {
-		/* Limitar o tempo em aproximadamente 30 min*/
-		Integer timeoutSeconds = 1800;
-		Timer timer = new Timer();
-		
-		class RemindTask extends TimerTask{
-			private Boolean timeout = false;
-			
-			public Boolean timeout() {
-				return this.timeout;
-			}
-			
-			public void run() {
-	            timer.cancel();
-	            timeout = true;
-	        }
-		};
-		
-		RemindTask task = new RemindTask();
-		timer.schedule(task, timeoutSeconds);
-		
-		//Fixando tamanho da lista de possiveis alphas para 20
-		Integer size = 20;
-		
-		//Inicializa lista de alphas com probabilidades e demais variáveis
-		List<AlphaProbability> alphaList = new ArrayList<AlphaProbability>();
-		double p = ((double) 1)/size;
-		double alpha = 0.0;
-		double probability = 0.0;
-		
-		int[] N = new int[size];
-		double[] Sum = new double[size];
-		double[] A = new double[size];
-		double[] Q = new double[size];
-		
-		for(int j=0; j<size; j++) {
-			alpha = alpha + p;
-			probability = p;
-			AlphaProbability obj = new AlphaProbability(alpha, probability);
-			alphaList.add(obj);
-			
-			N[j] = j+1;
-			Sum[j] = 0;
-			A[j] = 0;
-			Q[j] = 0;
-		}
-		
-		/* Execução */
-		incumbentSol = createEmptySol();
-		for (int i = 0; i < iterations; i++) {
-			this.alpha = this.radomlySelectUsigProbability(alphaList, size);
-			defaultConstructiveHeuristic();
-			localSearch();
-			if (incumbentSol.cost > currentSol.cost) {
-				incumbentSol = new Solution<Integer>(currentSol);
-				if (verbose)
-					System.out.println("(Iter. " + i + ") BestSol = " + incumbentSol);
-			}
-			
-			//Atualiza probabilidades
-			for(int j=0; j<size; j++) {
-				Sum[j] = Sum[j] + currentSol.cost;
-			}
-			
-			for(int j=0; j<size; j++) {
-				A[j] = Sum[j]/N[j];
-			}
-			
-			double sumQ = 0.0;
-			for(int j=0; j<size; j++) {
-				Q[j] = incumbentSol.cost/A[j];
-				sumQ = sumQ + Q[j];
-			}
-			
-			for(int j=0; j<size; j++) {
-				alphaList.get(j).probability = 1 - Q[j]/sumQ;
-			} 
-			
-			
-			//Verifica se deu o timeout
-			if(task.timeout()) {
-				System.out.println("Timeout");
-				break;
-			}
-		}
-
-		return incumbentSol;
-	}
-	
-	public Solution<Integer> reactiveGraspConstructiveHeuristic() {
-		
-		this.solveReactiveGrasp();
-		
-		return currentSol;
+		return super.solve();
 	}
 	
 	public Double radomlySelectUsigProbability(List<AlphaProbability> probList, Integer size) {

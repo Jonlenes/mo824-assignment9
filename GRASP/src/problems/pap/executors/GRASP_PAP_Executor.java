@@ -31,12 +31,6 @@ public class GRASP_PAP_Executor {
 				// DEFAULT
 				new Experiment(LocalSearchType.FIRST_IMPROVING, ConstructiveHeuristicType.DEFAULT, "FIRST_DEFAULT"),
 				new Experiment(LocalSearchType.BEST_IMPROVING,  ConstructiveHeuristicType.DEFAULT, "BEST_DEFAULT"),
-
-				//REACTIVE GRASP + FIRST
-				new Experiment(LocalSearchType.FIRST_IMPROVING, ConstructiveHeuristicType.REACTIVE_GRASP, "FIRST_REACTIVE_GRASP"),
-				
-				//REACTIVE GRASP + BEST
-				new Experiment(LocalSearchType.BEST_IMPROVING, ConstructiveHeuristicType.REACTIVE_GRASP, "BEST_REACTIVE_GRASP"),
 				
 				// RANDOM_PLUS + FIRST
 				new Experiment(LocalSearchType.FIRST_IMPROVING, ConstructiveHeuristicType.RANDOM_PLUS, "FIRST_RANDOM_PLUS_P_0.1", 0.1),
