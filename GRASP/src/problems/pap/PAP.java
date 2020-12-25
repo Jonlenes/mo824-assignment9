@@ -12,6 +12,14 @@ import problems.Evaluator;
 import solutions.Solution;
 
 
+/*
+ * This class has 3 main goals
+ * 	1) Load and storage problem instance;
+ *  2) Compute objective value;
+ *  3) Validate solution;
+ * 
+ */
+
 public class PAP implements Evaluator<Integer> {
 
 	/**
@@ -25,7 +33,7 @@ public class PAP implements Evaluator<Integer> {
 	public final Double[] variables;
 
 
-	public HashMap<String,Integer> values;
+	public HashMap<String, Integer> values;
 	public Integer[] hd;
 	public Integer[][] apd;
 	public Integer[][] rpt;
@@ -72,6 +80,68 @@ public class PAP implements Evaluator<Integer> {
 	@Override
 	public Integer getDomainSize() {
 		return size;
+	}
+	
+	private Integer solIndex(int p, int d, int t) {
+		return p + values.get("D") * (d + values.get("T") * t);
+	}
+	
+	public Double getSolValue(Solution<Integer> sol, int p, int d, int t) {
+		return variables[solIndex(p, d, t)];
+	}
+	
+	
+	public boolean validate(Solution<Integer> sol) {
+		// Problem constraint 1 and 3
+		Integer[] periods = new Integer[values.get("P")];
+		for (int d = 0; d < values.get("D"); d++) {
+	    	int countProf = 0;
+			for (int p = 0; p < values.get("P"); p++) {
+				int sum = 0;
+	    		for (int t = 0; t < values.get("T"); t++) {
+	    			sum += getSolValue(sol, p, d, t);
+				}
+	    		if (sum > 0) {
+	    			countProf += 1;
+	    			periods[p] += sum;
+	    		}
+	    		if (sum != 0 && sum != hd[d])
+	    			return false;
+	    	}
+			if (countProf > 1)
+				return false;
+	    }
+		
+		// Problem constraint 6
+		for (Integer period : periods)
+			if (period > values.get("H"))
+				return false;
+		
+		// Problem constraint 4
+		for (int t = 0; t < values.get("T"); t++) {
+			long sumRooms = 0;
+			for (int d = 0; d < values.get("D"); d++) {
+				for (int p = 0; p < values.get("P"); p++) {
+					sumRooms += getSolValue(sol, p, d, t);
+				}
+			}
+			if (sumRooms > values.get("S"))
+				return false;
+		}
+	    
+	    // Problem constraint 5 e 7
+		for (int p = 0; p < values.get("P"); p++) {
+			for (int t = 0; t < values.get("T"); t++) {
+				long sum = 0;
+				for (int d = 0; d < values.get("D"); d++) {
+					sum += getSolValue(sol, p, d, t);
+				}
+				if (sum > rpt[p][t])
+					return false;
+			}
+		}
+
+	    return true;
 	}
 
 	/**
