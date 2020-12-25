@@ -2,7 +2,6 @@ package problems.pap.solvers;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import metaheuristics.grasp.AbstractGRASP;
@@ -37,9 +36,9 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 	}
 
 	@Override
-	public List<Integer> makeCL() {
+	public ArrayList<Integer> makeCL() {
 
-		List<Entry<Integer,Integer>> _CL = new ArrayList<Entry<Integer,Integer>>();
+		ArrayList<Integer> _CL = new ArrayList<Integer>();
 		for (int i = 0; i < ObjFunction.getDomainSize(); i++) {
 			Integer cand = i;
 			_CL.add(cand);
@@ -244,8 +243,10 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 			 * Explore all candidate elements to enter the solution, saving the
 			 * highest and lowest cost variation achieved by the candidates.
 			 */
-			for (Integer c : CL) {
-				Double deltaCost = ObjFunction.evaluateInsertionCost(c, currentSol);
+			Double[] deltaCosts = new Double[CL.size()];
+			for (int i = 0; i < CL.size(); i++) {
+				Double deltaCost = ObjFunction.evaluateInsertionCost(CL.get(i), currentSol);
+				deltaCosts[i] = deltaCost;
 				if (deltaCost < minCost)
 					minCost = deltaCost;
 				if (deltaCost > maxCost)
@@ -256,10 +257,9 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 			 * Among all candidates, insert into the RCL those with the highest
 			 * performance using parameter alpha as threshold.
 			 */
-			for (Integer c : CL) {
-				Double deltaCost = ObjFunction.evaluateInsertionCost(c, currentSol);
-				if (deltaCost <= minCost + alpha * (maxCost - minCost)) {
-					RCL.add(c);
+			for (int i = 0; i < CL.size(); i++) {
+				if (deltaCosts[i] <= minCost + alpha * (maxCost - minCost)) {
+					RCL.add(CL.get(i));
 				}
 			}
 			
@@ -281,6 +281,7 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 	public Solution<Integer> solve() {
 		return super.solve();
 	}
+
 	
 	public Solution<Integer> randomPlusConstructionConstructiveHeuristic() {
 		CL = makeCL();
