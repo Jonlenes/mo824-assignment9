@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.List;
 
 import metaheuristics.grasp.AbstractGRASP;
-import models.AlphaProbability;
 import models.ConstructiveHeuristicType;
 import models.LocalSearchType;
 import models.Candidate;
@@ -38,9 +37,9 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 	}
 
 	@Override
-	public ArrayList<Integer> makeCL() {
+	public List<Integer> makeCL() {
 
-		ArrayList<Integer> _CL = new ArrayList<Integer>();
+		List<Entry<Integer,Integer>> _CL = new ArrayList<Entry<Integer,Integer>>();
 		for (int i = 0; i < ObjFunction.getDomainSize(); i++) {
 			Integer cand = i;
 			_CL.add(cand);
@@ -281,20 +280,6 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 	@Override
 	public Solution<Integer> solve() {
 		return super.solve();
-	}
-	
-	public Double radomlySelectUsigProbability(List<AlphaProbability> probList, Integer size) {
-		Collections.sort(probList);
-		
-		double rand = rng.nextDouble();
-		double acumProb = 0;
-		for(int j=0; j<size; j++) {
-			acumProb = acumProb + probList.get(j).probability;
-			if(rand < acumProb) {
-				return probList.get(j).alpha;
-			}
-		}
-		return probList.get(size).alpha;
 	}
 	
 	public Solution<Integer> randomPlusConstructionConstructiveHeuristic() {
