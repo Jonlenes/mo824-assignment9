@@ -6,6 +6,7 @@ import java.io.IOException;
 import models.ConstructiveHeuristicType;
 import models.Experiment;
 import models.LocalSearchType;
+import models.Triple;
 import problems.pap.solvers.GRASP_PAP;
 import solutions.Solution;
 
@@ -26,26 +27,13 @@ public class GRASP_PAP_Executor {
 		
 		// Experiments
 		Experiment[] experiments = {
-				
-				
-				// DEFAULT
-				new Experiment(LocalSearchType.FIRST_IMPROVING, ConstructiveHeuristicType.DEFAULT, "FIRST_DEFAULT"),
-				new Experiment(LocalSearchType.BEST_IMPROVING,  ConstructiveHeuristicType.DEFAULT, "BEST_DEFAULT"),
-				
-				// RANDOM_PLUS + FIRST
-				new Experiment(LocalSearchType.FIRST_IMPROVING, ConstructiveHeuristicType.RANDOM_PLUS, "FIRST_RANDOM_PLUS_P_0.1", 0.1),
-				new Experiment(LocalSearchType.FIRST_IMPROVING, ConstructiveHeuristicType.RANDOM_PLUS, "FIRST_RANDOM_PLUS_P_0.2", 0.2),
-				new Experiment(LocalSearchType.FIRST_IMPROVING, ConstructiveHeuristicType.RANDOM_PLUS, "FIRST_RANDOM_PLUS_P_0.3", 0.3),
-
-				// RANDOM_PLUS + BEST
-				new Experiment(LocalSearchType.BEST_IMPROVING, ConstructiveHeuristicType.RANDOM_PLUS, "FIRST_RANDOM_PLUS_P_0.1", 0.1),
-				new Experiment(LocalSearchType.BEST_IMPROVING, ConstructiveHeuristicType.RANDOM_PLUS, "FIRST_RANDOM_PLUS_P_0.2", 0.1),
-				new Experiment(LocalSearchType.BEST_IMPROVING, ConstructiveHeuristicType.RANDOM_PLUS, "FIRST_RANDOM_PLUS_P_0.3", 0.1),
+			new Experiment(LocalSearchType.FIRST_IMPROVING, ConstructiveHeuristicType.DEFAULT, "FIRST_DEFAULT"),
+			new Experiment(LocalSearchType.BEST_IMPROVING,  ConstructiveHeuristicType.DEFAULT, "BEST_DEFAULT"),
 		};
 		
 		
 		for (String instance : instances) {
-			FileWriter fileWriter = new FileWriter("GRASP/results/" + instance + ".txt");
+			FileWriter fileWriter = new FileWriter("results/" + instance + ".txt");
 			
 			for (Double alpha : alphas) {
 				for (Experiment experiment: experiments) {
@@ -53,9 +41,8 @@ public class GRASP_PAP_Executor {
 						String expName = "ALPHA=" + alpha + "_" + experiment.getKey();
 						System.out.println("\n\nINSTANCE:" + instance + "\tRUNNING EXPERIMENT: " + expName + "\n");
 
-						GRASP_PAP grasp_pap = new GRASP_PAP(alpha, iterations, "instances/" + instance,
-								experiment.getLocalSearchType(), experiment.getConstructiveHeuristicType(),
-								experiment.getPerctRandomPlus());
+						GRASP_PAP grasp_pap = new GRASP_PAP(alpha, iterations, "../instances/" + instance,
+								experiment.getLocalSearchType(), experiment.getConstructiveHeuristicType());
 						GRASP_PAP_Executor.executeInstance(expName, grasp_pap, fileWriter);
 
 					} catch (IOException e) {
@@ -72,7 +59,7 @@ public class GRASP_PAP_Executor {
 	public static void executeInstance(String title, GRASP_PAP grasp, FileWriter fileWriter) {
 		
 		long startTime = System.currentTimeMillis();
-		Solution<Integer> bestSol = grasp.solve();
+		Solution<Triple> bestSol = grasp.solve();
 		long endTime   = System.currentTimeMillis();
 		long totalTime = endTime - startTime;
 		double time = (double)totalTime/(double)1000;

@@ -7,68 +7,73 @@ import java.util.List;
 import metaheuristics.grasp.AbstractGRASP;
 import models.ConstructiveHeuristicType;
 import models.LocalSearchType;
+import models.Triple;
 import models.Candidate;
 import problems.pap.PAP_Inverse;
 import solutions.Solution;
 
 
-public class GRASP_PAP extends AbstractGRASP<Integer> {
+public class GRASP_PAP extends AbstractGRASP<Triple> {
 
 	private LocalSearchType localSearchType;
-	private ConstructiveHeuristicType constructionType;
-	private double perctRandomPlus;
 	
 	public GRASP_PAP(Double alpha, Integer iterations, String filename, LocalSearchType localSearchType, 
 			ConstructiveHeuristicType constructionType) throws IOException {
 		super(new PAP_Inverse(filename), alpha, iterations);
 		this.localSearchType = localSearchType;
-		this.constructionType = constructionType;
-		
-	}
-	
-	public GRASP_PAP(Double alpha, Integer iterations, String filename, LocalSearchType localSearchType, 
-			ConstructiveHeuristicType constructionType, double perctRandomPlus) throws IOException {
-		super(new PAP_Inverse(filename), alpha, iterations);
-		this.localSearchType = localSearchType;
-		this.constructionType = constructionType;
-		this.perctRandomPlus = perctRandomPlus;
 		
 	}
 
 	@Override
-	public ArrayList<Integer> makeCL() {
+	public ArrayList<Triple> makeCL() {
 
-		ArrayList<Integer> _CL = new ArrayList<Integer>();
-		for (int i = 0; i < ObjFunction.getDomainSize(); i++) {
-			Integer cand = i;
-			_CL.add(cand);
+		ArrayList<Triple> _CL = new ArrayList<Triple>();
+		for (int p = 0; p < ObjFunction.getValue("P"); p++) {
+			for (int d = 0; d < ObjFunction.getValue("D"); d++) {
+				// IMPORTANT: here CL its combinations of (p, d) and t represent
+				// the total of needed periods for that course (Hd)
+				_CL.add(new Triple(p, d, ObjFunction.getHd(d)));
+			}
 		}
 
 		return _CL;
 	}
 
 	@Override
-	public ArrayList<Integer> makeRCL() {
-		
-		ArrayList<Integer> _RCL = new ArrayList<Integer>();
-
+	public ArrayList<Triple> makeRCL() {
+		ArrayList<Triple> _RCL = new ArrayList<Triple>();
 		return _RCL;
 	}
 
 	@Override
 	public void updateCL() {
-		// TODO Auto-generated method stub
+		// Update class location (S)
+		/*
+		Integer S = ObjFunction.getValue("S");
+		Integer T = ObjFunction.getValue("T");
+		int i = 0, t = 0, countRooms = 0;
+		for (; i < CL.size(); ++i) {
+			CL.get(i).setT(t);
+			countRooms++;
+			// Check for max rooms allocations
+			if (countRooms == S) t++;
+			if (t > T) break;
+		}
+		for (int j = CL.size() - 1; j >= i; --j)
+			CL.remove(CL.get(j));
+		*/
+		
 	}
 
 	@Override
-	public Solution<Integer> createEmptySol() {
-		Solution<Integer> sol = new Solution<Integer>();
+	public Solution<Triple> createEmptySol() {
+		Solution<Triple> sol = new Solution<Triple>();
 		sol.cost = 0.0;
 		return sol;
 	}
 
 	@Override
-	public Solution<Integer> localSearch() {
+	public Solution<Triple> localSearch() {
 		if(this.localSearchType.equals(LocalSearchType.FIRST_IMPROVING)) {
 			return this.firstImprovingLocalSearch();
 		}
@@ -76,13 +81,13 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 		return this.bestImprovingLocalSearch();
 	}
 	
-	private Candidate evaluateInsertions(Candidate cand, Solution<Integer> currentSol, Boolean first, double bestCost) {
+	private Candidate evaluateInsertions(Candidate cand, Solution<Triple> currentSol, Boolean first, double bestCost) {
 		double deltaCost = 0;
-		for (Integer candIn : CL) {
+		for (Triple candIn : CL) {
 			deltaCost = ObjFunction.evaluateInsertionCost(candIn, currentSol);
 			if (deltaCost < bestCost) {
 				cand.setDeltaCost(deltaCost);
-				cand.setIndex(candIn);
+				cand.setTriple(candIn);
 				bestCost = deltaCost;
 				if (first) break;
 			}
@@ -90,13 +95,13 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 		return cand;
 	}
 	
-	private Candidate evaluateRemovals(Candidate cand, Solution<Integer> currentSol, Boolean first, double bestCost) {
+	private Candidate evaluateRemovals(Candidate cand, Solution<Triple> currentSol, Boolean first, double bestCost) {
 		double deltaCost = 0;
-		for (Integer candOut : currentSol) {
+		for (Triple candOut : currentSol) {
 			deltaCost = ObjFunction.evaluateRemovalCost(candOut, currentSol);
 			if (deltaCost < bestCost) {
 				cand.setDeltaCost(deltaCost);
-				cand.setIndex(candOut);
+				cand.setTriple(candOut);
 				bestCost = deltaCost;
 				if (first) break;
 			}
@@ -104,14 +109,14 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 		return cand;
 	}
 	
-	private Candidate[] evaluateExchanges(Candidate bestCandIn, Candidate bestCandOut, Solution<Integer> currentSol, Boolean first, double bestCost) {
+	private Candidate[] evaluateExchanges(Candidate bestCandIn, Candidate bestCandOut, Solution<Triple> currentSol, Boolean first, double bestCost) {
 		double deltaCost = 0;
-		for (Integer candIn : CL) {
-			for (Integer candOut : currentSol) {
+		for (Triple candIn : CL) {
+			for (Triple candOut : currentSol) {
 				deltaCost = ObjFunction.evaluateExchangeCost(candIn, candOut, currentSol);
 				if (deltaCost < bestCost) {
-					bestCandIn.setIndex(candIn);
-					bestCandOut.setIndex(candOut);
+					bestCandIn.setTriple(candIn);
+					bestCandOut.setTriple(candOut);
 					bestCandIn.setDeltaCost(deltaCost);
 					bestCandOut.setDeltaCost(deltaCost);
 					bestCost = deltaCost;
@@ -125,20 +130,20 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 	private void updateCurrentSoluction(Candidate bestCandIn, Candidate bestCandOut) {
 		Double minDeltaCost = Math.min(bestCandIn.getDeltaCost(), bestCandOut.getDeltaCost());
 		if (minDeltaCost < -Double.MIN_VALUE) {
-			if (bestCandOut.getIndex() != null) {
-				currentSol.remove(bestCandOut.getIndex());
-				CL.add(bestCandOut.getIndex());
+			if (bestCandOut.getTriple() != null) {
+				currentSol.remove(bestCandOut.getTriple());
+				CL.add(bestCandOut.getTriple());
 			}
-			if (bestCandIn.getIndex() != null) {
-				currentSol.add(bestCandIn.getIndex());
-				CL.remove(bestCandIn.getIndex());
+			if (bestCandIn.getTriple() != null) {
+				currentSol.add(bestCandIn.getTriple());
+				CL.remove(bestCandIn.getTriple());
 			}
 			
 			ObjFunction.evaluate(currentSol);
 		}
 	}
 	
-	public Solution<Integer> firstImprovingLocalSearch(){
+	public Solution<Triple> firstImprovingLocalSearch(){
 		Double minDeltaCost = -Double.MIN_VALUE;
 		
 		updateCL();
@@ -148,14 +153,14 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 		bestCandIn = evaluateInsertions(bestCandIn, currentSol, true, minDeltaCost);
 		if (bestCandIn.getDeltaCost() < minDeltaCost) {
 			minDeltaCost = bestCandIn.getDeltaCost();
-			bestCandOut.setIndex(null);
+			bestCandOut.setTriple(null);
 		}
 		
 		// Evaluate removals
 		bestCandOut = evaluateRemovals(bestCandOut, currentSol, true, minDeltaCost);
 		if (bestCandOut.getDeltaCost() < minDeltaCost) {
 			minDeltaCost = bestCandIn.getDeltaCost();
-			bestCandIn.setIndex(null);
+			bestCandIn.setTriple(null);
 		}
 		
 		// Evaluate exchanges
@@ -171,7 +176,7 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 		return null;
 	}
 	
-	public Solution<Integer> bestImprovingLocalSearch(){
+	public Solution<Triple> bestImprovingLocalSearch(){
 		Double minDeltaCost;
 		Candidate bestCandIn, bestCandOut;
 
@@ -185,14 +190,14 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 			bestCandIn = evaluateInsertions(bestCandIn, currentSol, false, minDeltaCost);
 			if (bestCandIn.getDeltaCost() < minDeltaCost) {
 				minDeltaCost = bestCandIn.getDeltaCost();
-				bestCandOut.setIndex(null);
+				bestCandOut.setTriple(null);
 			}
 			 
 			// Evaluate removals
 			bestCandOut = evaluateRemovals(bestCandOut, currentSol, false, minDeltaCost);
 			if (bestCandOut.getDeltaCost() < minDeltaCost) {
 				minDeltaCost = bestCandIn.getDeltaCost();
-				bestCandIn.setIndex(null);
+				bestCandIn.setTriple(null);
 			}
 			
 			// Evaluate exchanges
@@ -212,54 +217,50 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 	}
 
 	@Override
-	public Solution<Integer> constructiveHeuristic() {
-		if(this.constructionType.equals(ConstructiveHeuristicType.RANDOM_PLUS))
-			return this.randomPlusConstructionConstructiveHeuristic();
+	public Solution<Triple> constructiveHeuristic() {
 		return this.defaultConstructiveHeuristic();
 	}
 	
-	private void chooseCandidateRandomly(List<Integer> candidates) {
+	private void chooseCandidateRandomly(List<Triple> candidates) {
 		int rndIndex = rng.nextInt(candidates.size());
-		Integer inCand = candidates.get(rndIndex);
+		Triple inCand = candidates.get(rndIndex);
 		CL.remove(inCand);
+		// TODO: To add inCand to the solution it's need to select one available time for all needed periods
+		// Otherwise, it will never pass on validate
 		currentSol.add(inCand);
 		ObjFunction.evaluate(currentSol);
 	}
 	
-	public Solution<Integer> defaultConstructiveHeuristic() {
+	public Solution<Triple> defaultConstructiveHeuristic() {
 		CL = makeCL();
 		RCL = makeRCL();
 		currentSol = createEmptySol();
 		currentCost = Double.POSITIVE_INFINITY;
-
+		Integer[][] apd = ObjFunction.getApd();
+		
 		/* Main loop, which repeats until the stopping criteria is reached. */
 		while (!constructiveStopCriteria()) {
-
-			double maxCost = Double.NEGATIVE_INFINITY, minCost = Double.POSITIVE_INFINITY;
+			
+			// Sort pair (p, d) by Apd
+			CL.sort((p1, p2) -> Integer.compare(apd[p2.getP()][p2.getD()], apd[p1.getP()][p1.getD()]));
 			currentCost = ObjFunction.evaluate(currentSol);
 			updateCL();
-
-			/*
-			 * Explore all candidate elements to enter the solution, saving the
-			 * highest and lowest cost variation achieved by the candidates.
-			 */
-			Double[] deltaCosts = new Double[CL.size()];
-			for (int i = 0; i < CL.size(); i++) {
-				Double deltaCost = ObjFunction.evaluateInsertionCost(CL.get(i), currentSol);
-				deltaCosts[i] = deltaCost;
-				if (deltaCost < minCost)
-					minCost = deltaCost;
-				if (deltaCost > maxCost)
-					maxCost = deltaCost;
-			}
-
+			
+			// Get min and max costs
+			Triple first = CL.get(0);
+			Triple last = CL.get(CL.size() - 1);
+			int maxCost = -apd[last.getP()][last.getD()];
+			int minCost = -apd[first.getP()][first.getD()];
+			
 			/*
 			 * Among all candidates, insert into the RCL those with the highest
 			 * performance using parameter alpha as threshold.
 			 */
-			for (int i = 0; i < CL.size(); i++) {
-				if (deltaCosts[i] <= minCost + alpha * (maxCost - minCost)) {
-					RCL.add(CL.get(i));
+			for (int i = 0; i < CL.size(); ++i) {
+				Triple c = CL.get(i);
+				Integer cost = -apd[c.getP()][c.getD()];
+				if (cost <= minCost + alpha * (maxCost - minCost)) {
+					RCL.add(c);
 				}
 			}
 			
@@ -278,64 +279,8 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 	}
 	
 	@Override
-	public Solution<Integer> solve() {
+	public Solution<Triple> solve() {
 		return super.solve();
-	}
-
-	
-	public Solution<Integer> randomPlusConstructionConstructiveHeuristic() {
-		CL = makeCL();
-		RCL = makeRCL();
-		currentSol = createEmptySol();
-		currentCost = Double.POSITIVE_INFINITY;
-		int p = (int) (CL.size() * perctRandomPlus);
-		
-		for (int i = 0; i < p; ++i) {
-			chooseCandidateRandomly(CL);
-		}
-
-		/* Main loop, which repeats until the stopping criteria is reached. */
-		while (!constructiveStopCriteria()) {
-
-			double maxCost = Double.NEGATIVE_INFINITY, minCost = Double.POSITIVE_INFINITY;
-			currentCost = ObjFunction.evaluate(currentSol);
-			updateCL();
-
-			/*
-			 * Explore all candidate elements to enter the solution, saving the
-			 * highest and lowest cost variation achieved by the candidates.
-			 */
-			for (Integer c : CL) {
-				Double deltaCost = ObjFunction.evaluateInsertionCost(c, currentSol);
-				if (deltaCost < minCost)
-					minCost = deltaCost;
-				if (deltaCost > maxCost)
-					maxCost = deltaCost;
-			}
-
-			/*
-			 * Among all candidates, insert into the RCL those with the highest
-			 * performance using parameter alpha as threshold.
-			 */
-			for (Integer c : CL) {
-				Double deltaCost = ObjFunction.evaluateInsertionCost(c, currentSol);
-				if (deltaCost <= minCost + alpha * (maxCost - minCost)) {
-					RCL.add(c);
-				}
-			}
-			
-			/*Stop when RCL is empty */
-			if (RCL.isEmpty()) {
-				break;
-			}
-			
-			/* Choose a candidate randomly from the RCL */
-			chooseCandidateRandomly(RCL);
-			RCL.clear();
-
-		}
-
-		return currentSol;
 	}
 	
 	@Override

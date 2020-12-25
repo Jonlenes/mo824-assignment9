@@ -2,6 +2,9 @@ package problems.pap;
 
 import java.io.IOException;
 
+import models.Triple;
+import solutions.Solution;
+
 
 public class PAP_Inverse extends PAP {
 
@@ -23,31 +26,31 @@ public class PAP_Inverse extends PAP {
 	 * @see problems.pap.PAP#evaluate()
 	 */
 	@Override
-	public Double evaluatePAP() {
-		return -super.evaluatePAP();
+	public Double evaluatePAP(Solution<Triple> sol) {
+		return -super.evaluatePAP(sol);
 	}
 	
 	/* (non-Javadoc)
 	 * @see problems.pap.PAP#evaluateInsertion(int)
 	 */
 	@Override
-	public Double evaluateInsertionPAP(int i) {	
-		return -super.evaluateInsertionPAP(i);
+	public Double evaluateInsertionPAP(Triple triple) {	
+		return -super.evaluateInsertionPAP(triple);
 	}
 	
 	/* (non-Javadoc)
 	 * @see problems.pap.PAP#evaluateRemoval(int)
 	 */
 	@Override
-	public Double evaluateRemovalPAP(int i) {
-		return -super.evaluateRemovalPAP(i);
+	public Double evaluateRemovalPAP(Triple triple) {
+		return -super.evaluateRemovalPAP(triple);
 	}
 	
 	/* (non-Javadoc)
 	 * @see problems.pap.PAP#evaluateExchange(int, int)
 	 */
 	@Override
-	public Double evaluateExchangePAP(int in, int out) {
+	public Double evaluateExchangePAP(Triple in, Triple out) {
 		return -super.evaluateExchangePAP(in,out);
 	}
 

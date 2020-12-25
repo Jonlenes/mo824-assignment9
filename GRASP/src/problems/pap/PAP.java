@@ -7,7 +7,13 @@ import java.io.Reader;
 import java.io.StreamTokenizer;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
+import models.Key;
+import models.Triple;
 import problems.Evaluator;
 import solutions.Solution;
 
@@ -20,7 +26,7 @@ import solutions.Solution;
  * 
  */
 
-public class PAP implements Evaluator<Integer> {
+public class PAP implements Evaluator<Triple> {
 
 	/**
 	 * Dimension of the domain.
@@ -30,10 +36,10 @@ public class PAP implements Evaluator<Integer> {
 	/**
 	 * The array of numbers representing the domain.
 	 */
-	public final Double[] variables;
+	public final Double[][][] variables;
 
 
-	public HashMap<String, Integer> values;
+	public static HashMap<String, Integer> values;
 	public Integer[] hd;
 	public Integer[][] apd;
 	public Integer[][] rpt;
@@ -61,12 +67,11 @@ public class PAP implements Evaluator<Integer> {
 	 * @param sol
 	 *            the solution which will be evaluated.
 	 */
-	public void setVariables(Solution<Integer> sol) {
-
+	public void setVariables(Solution<Triple> sol) {
 		resetVariables();
 		if (!sol.isEmpty()) {
-			for (Integer elem : sol) {
-				variables[elem] = 1.0;
+			for (Triple elem : sol) {
+				variables[elem.getP()][elem.getD()][elem.getT()] = 1.0;
 			}
 		}
 
@@ -82,63 +87,72 @@ public class PAP implements Evaluator<Integer> {
 		return size;
 	}
 	
-	private Integer solIndex(int p, int d, int t) {
-		return p + values.get("D") * (d + values.get("T") * t);
+	public Integer getValue(String key) {
+		return values.get(key);
 	}
 	
-	public Double getSolValue(Solution<Integer> sol, int p, int d, int t) {
-		return variables[solIndex(p, d, t)];
+	private HashMap<Integer, Integer> sumOneToValue(HashMap<Integer, Integer> map, Integer key) {
+		Integer value = map.containsKey(key)?  map.get(key) : 0;
+		value += 1;
+		map.put(key, value);
+		return map;
 	}
 	
-	
-	public boolean validate(Solution<Integer> sol) {
-		// Problem constraint 1 and 3
-		Integer[] periods = new Integer[values.get("P")];
-		for (int d = 0; d < values.get("D"); d++) {
-	    	int countProf = 0;
-			for (int p = 0; p < values.get("P"); p++) {
-				int sum = 0;
-	    		for (int t = 0; t < values.get("T"); t++) {
-	    			sum += getSolValue(sol, p, d, t);
-				}
-	    		if (sum > 0) {
-	    			countProf += 1;
-	    			periods[p] += sum;
-	    		}
-	    		if (sum != 0 && sum != hd[d])
-	    			return false;
-	    	}
-			if (countProf > 1)
-				return false;
-	    }
+	public boolean validate(Solution<Triple> sol) {
 		
-		// Problem constraint 6
-		for (Integer period : periods)
-			if (period > values.get("H"))
-				return false;
+		HashMap<Integer, Set<Integer>> allocations = new HashMap<Integer, Set<Integer>>();
+		HashMap<Integer, Integer> periods = new HashMap<Integer, Integer>();
+		HashMap<Integer, Integer> workloads = new HashMap<Integer, Integer>();
+		HashMap<Integer, Integer> rooms = new HashMap<Integer, Integer>();
+		HashMap<Key, Integer> restrictions = new HashMap<Key, Integer>();
+		
+		// Process solution and extract information
+		for (Triple triple : sol) {
+			int p = triple.getP(), d = triple.getD(), t = triple.getT();
+			
+			Set<Integer> set = allocations.containsKey(d)?  allocations.get(d) : new HashSet<Integer>();
+			set.add(p);
+			allocations.put(d, set);
+			
+			periods = sumOneToValue(periods, d);
+			workloads = sumOneToValue(workloads, p);
+			rooms = sumOneToValue(rooms, t);
+			
+			Key key = new Key(p, t);
+			Integer countClasses = restrictions.containsKey(key)?  restrictions.get(key) : 0;
+			restrictions.put(key, countClasses + 1);
+		}
+
+		// Problem constraint 1
+		for(Map.Entry<Integer, Set<Integer>> entry : allocations.entrySet()) {
+		    // Check if has more than one professor
+			if (entry.getValue().size() > 1)
+		    	return false;
+		}
+
+		// Problem constraint 3
+		for(Map.Entry<Integer, Integer> entry : periods.entrySet()) {
+		    // Check if has more than one professor
+			if (entry.getValue() != hd[entry.getKey()])
+		    	return false;
+		}
 		
 		// Problem constraint 4
-		for (int t = 0; t < values.get("T"); t++) {
-			long sumRooms = 0;
-			for (int d = 0; d < values.get("D"); d++) {
-				for (int p = 0; p < values.get("P"); p++) {
-					sumRooms += getSolValue(sol, p, d, t);
-				}
-			}
-			if (sumRooms > values.get("S"))
+		for (Map.Entry<Integer, Integer> entry : rooms.entrySet())
+			if (entry.getValue() > values.get("S"))
 				return false;
-		}
-	    
+
+		// Problem constraint 6
+		for (Map.Entry<Integer, Integer> entry : workloads.entrySet())
+			if (entry.getValue() > values.get("H"))
+				return false;
+
 	    // Problem constraint 5 e 7
-		for (int p = 0; p < values.get("P"); p++) {
-			for (int t = 0; t < values.get("T"); t++) {
-				long sum = 0;
-				for (int d = 0; d < values.get("D"); d++) {
-					sum += getSolValue(sol, p, d, t);
-				}
-				if (sum > rpt[p][t])
-					return false;
-			}
+		
+		for (Map.Entry<Key, Integer> entry : restrictions.entrySet()) {
+			Key key = entry.getKey();
+			if (entry.getValue() > rpt[key.getX()][key.getY()])
+				return false;
 		}
 
 	    return true;
@@ -154,11 +168,11 @@ public class PAP implements Evaluator<Integer> {
 	 * @return The evaluation of the PAP.
 	 */
 	@Override
-	public Double evaluate(Solution<Integer> sol) {
+	public Double evaluate(Solution<Triple> sol) {
+		setVariables(sol);
 		if (!validate(sol))
 			return Double.MAX_VALUE;
-		setVariables(sol);
-		return sol.cost = evaluatePAP();
+		return sol.cost = evaluatePAP(sol);
 
 	}
 
@@ -168,22 +182,21 @@ public class PAP implements Evaluator<Integer> {
 	 * 
 	 * @return The value of the PAP.
 	 */
-	public Double evaluatePAP() {
-
-		Double aux = (double) 0, sum = (double) 0;
-		Double vecAux[] = new Double[size];
-
-		for (int i = 0; i < size; i++) {
-			for (int j = 0; j < size; j++) {
-				aux += variables[j] * apd[i][j];
-			}
-			vecAux[i] = aux;
-			sum += aux * variables[i];
-			aux = (double) 0;
+	public Double evaluatePAP(Solution<Triple> sol) {
+		Integer[] courses = new Integer[values.get("D")];
+		Arrays.fill(courses, -1);
+		for (Triple triple: sol) {
+			courses[triple.getD()] = triple.getP();
 		}
-
-		return sum;
-
+		
+		Double cost = 0.0;
+		for (int i = 0; i < values.get("D"); ++i) {
+			if (courses[i] != -1)
+				cost += apd[i][courses[i]];
+			else
+				cost -= 100;
+		}
+		return cost;
 	}
 
 	/*
@@ -193,10 +206,10 @@ public class PAP implements Evaluator<Integer> {
 	 * solutions.Solution)
 	 */
 	@Override
-	public Double evaluateInsertionCost(Integer elem, Solution<Integer> sol) {
+	public Double evaluateInsertionCost(Triple elem, Solution<Triple> sol) {
+		setVariables(sol);
 		if (!validate(sol))
 			return Double.MAX_VALUE;
-		setVariables(sol);
 		return evaluateInsertionPAP(elem);
 
 	}
@@ -210,12 +223,11 @@ public class PAP implements Evaluator<Integer> {
 	 * @return The variation of the objective function resulting from the
 	 *         insertion.
 	 */
-	public Double evaluateInsertionPAP(int i) {
-
-		if (variables[i] == 1)
+	public Double evaluateInsertionPAP(Triple triple) {
+		if (variables[triple.getP()][triple.getD()][triple.getT()] == 1)
 			return 0.0;
 
-		return evaluateContributionPAP(i);
+		return evaluateContributionPAP(triple);
 	}
 
 	/*
@@ -225,10 +237,10 @@ public class PAP implements Evaluator<Integer> {
 	 * solutions.Solution)
 	 */
 	@Override
-	public Double evaluateRemovalCost(Integer elem, Solution<Integer> sol) {
+	public Double evaluateRemovalCost(Triple elem, Solution<Triple> sol) {
+		setVariables(sol);
 		if (!validate(sol))
 			return Double.MAX_VALUE;
-		setVariables(sol);
 		return evaluateRemovalPAP(elem);
 
 	}
@@ -242,12 +254,11 @@ public class PAP implements Evaluator<Integer> {
 	 * @return The variation of the objective function resulting from the
 	 *         removal.
 	 */
-	public Double evaluateRemovalPAP(int i) {
-
-		if (variables[i] == 0)
+	public Double evaluateRemovalPAP(Triple triple) {
+		if (variables[triple.getP()][triple.getD()][triple.getT()] == 0)
 			return 0.0;
 
-		return -evaluateContributionPAP(i);
+		return -evaluateContributionPAP(triple);
 
 	}
 
@@ -258,10 +269,10 @@ public class PAP implements Evaluator<Integer> {
 	 * java.lang.Object, solutions.Solution)
 	 */
 	@Override
-	public Double evaluateExchangeCost(Integer elemIn, Integer elemOut, Solution<Integer> sol) {
+	public Double evaluateExchangeCost(Triple elemIn, Triple elemOut, Solution<Triple> sol) {
+		setVariables(sol);
 		if (!validate(sol))
 			return Double.MAX_VALUE;
-		setVariables(sol);
 		return evaluateExchangePAP(elemIn, elemOut);
 
 	}
@@ -279,20 +290,19 @@ public class PAP implements Evaluator<Integer> {
 	 * @return The variation of the objective function resulting from the
 	 *         exchange.
 	 */
-	public Double evaluateExchangePAP(int in, int out) {
+	public Double evaluateExchangePAP(Triple in, Triple out) {
+        Double sum = 0.0;
 
-		Double sum = 0.0;
-
+		//TODO: implement equal method on Triple?
 		if (in == out)
 			return 0.0;
-		if (variables[in] == 1)
+		if (variables[in.getP()][in.getD()][in.getT()] == 1)
 			return evaluateRemovalPAP(out);
-		if (variables[out] == 0)
+		if (variables[out.getP()][out.getD()][out.getT()] == 0)
 			return evaluateInsertionPAP(in);
 
 		sum += evaluateContributionPAP(in);
 		sum -= evaluateContributionPAP(out);
-		sum -= (apd[in][out] + apd[out][in]);
 
 		return sum;
 	}
@@ -311,17 +321,17 @@ public class PAP implements Evaluator<Integer> {
 	 * @return the variation of the objective function resulting from the
 	 *         insertion.
 	 */
-	private Double evaluateContributionPAP(int i) {
-
-		Double sum = 0.0;
-
-		for (int j = 0; j < size; j++) {
-			if (i != j)
-				sum += variables[j] * (apd[i][j] + apd[j][i]);
-		}
-		sum += apd[i][i];
-
-		return sum;
+	private Double evaluateContributionPAP(Triple triple) {
+		double sum = 0.0;
+		
+		// Check if the course it's already allocated
+		for (int t = 0; t < values.get("T"); ++t)
+			sum += variables[triple.getP()][triple.getD()][t];
+		
+		if (sum == 0)
+			return Double.valueOf(-apd[triple.getP()][triple.getD()]);
+		
+		return 0.0;
 	}
 
 	/**
@@ -365,9 +375,9 @@ public class PAP implements Evaluator<Integer> {
 
 		//APD
 		stok.nextToken();
-		apd = new Integer[p][p];
+		apd = new Integer[p][d];
 		for(int i = 0; i < p; i++){
-			for(int j = 0; j < p; j++){
+			for(int j = 0; j < d; j++){
 				stok.nextToken();
 				apd[i][j] = (int)stok.nval;
 			}
@@ -393,8 +403,8 @@ public class PAP implements Evaluator<Integer> {
 	 * 
 	 * @return a pointer to the array of domain variables.
 	 */
-	protected Double[] allocateVariables() {
-		Double[] _variables = new Double[size];
+	protected Double[][][] allocateVariables() {
+		Double[][][] _variables = new Double[values.get("P")][values.get("D")][values.get("T")];
 		return _variables;
 	}
 
@@ -402,39 +412,19 @@ public class PAP implements Evaluator<Integer> {
 	 * Reset the domain variables to their default values.
 	 */
 	public void resetVariables() {
-		Arrays.fill(variables, 0.0);
+		for (int p = 0; p < values.get("P"); ++p)
+			for (int d = 0; d < values.get("D"); ++d)
+				Arrays.fill(variables[p][d], 0.0);
 	}
 
-	/**
-	 * Prints matrix {@link #apd}.
-	 */
-	public void printMatrix() {
-
-		for (int i = 0; i < size; i++) {
-			for (int j = i; j < size; j++) {
-				System.out.print(apd[i][j] + " ");
-			}
-			System.out.println();
-		}
-
-	}
 
 	@Override
-	public Boolean validateInsertion(Integer elem, Solution<Integer> sol) {
-		// TODO Auto-generated method stub
-		return true;
+	public Integer[][] getApd() {
+		return apd;
 	}
-
+	
 	@Override
-	public Boolean validateRemoval(Integer elem, Solution<Integer> sol) {
-		// TODO Auto-generated method stub
-		return true;
+	public Integer getHd(int d) {
+		return hd[d];
 	}
-
-	@Override
-	public Boolean validateExchange(Integer elemIn, Integer elemOut, Solution<Integer> sol) {
-		// TODO Auto-generated method stub
-		return true;
-	}
-
 }

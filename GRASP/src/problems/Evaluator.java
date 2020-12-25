@@ -75,10 +75,10 @@ public interface Evaluator<E> {
 	 */
 	public abstract Double evaluateExchangeCost(E elemIn, E elemOut, Solution<E> sol);
 	
-	public abstract Boolean validateInsertion(Integer elem, Solution<Integer> sol);
+	public abstract Integer getValue(String key);
 	
-	public abstract Boolean validateRemoval(Integer elem, Solution<Integer> sol);
-	
-	public abstract Boolean validateExchange(Integer elemIn, Integer elemOut, Solution<Integer> sol);
+	public abstract Integer[][] getApd();
+
+	public abstract Integer getHd(int d);
 
 }
