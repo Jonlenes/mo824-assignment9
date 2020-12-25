@@ -3,8 +3,6 @@ package problems.pap.solvers;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.List;
 
 import metaheuristics.grasp.AbstractGRASP;
@@ -84,7 +82,7 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 		double deltaCost = 0;
 		for (Integer candIn : CL) {
 			deltaCost = ObjFunction.evaluateInsertionCost(candIn, currentSol);
-			if (deltaCost < bestCost && ObjFunction.validateInsertion(candIn, currentSol)) {
+			if (deltaCost < bestCost) {
 				cand.setDeltaCost(deltaCost);
 				cand.setIndex(candIn);
 				bestCost = deltaCost;
@@ -98,7 +96,7 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 		double deltaCost = 0;
 		for (Integer candOut : currentSol) {
 			deltaCost = ObjFunction.evaluateRemovalCost(candOut, currentSol);
-			if (deltaCost < bestCost && ObjFunction.validateRemoval(candOut, currentSol)) {
+			if (deltaCost < bestCost) {
 				cand.setDeltaCost(deltaCost);
 				cand.setIndex(candOut);
 				bestCost = deltaCost;
@@ -113,7 +111,7 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 		for (Integer candIn : CL) {
 			for (Integer candOut : currentSol) {
 				deltaCost = ObjFunction.evaluateExchangeCost(candIn, candOut, currentSol);
-				if (deltaCost < bestCost && ObjFunction.validateExchange(candIn, candOut, currentSol)) {
+				if (deltaCost < bestCost) {
 					bestCandIn.setIndex(candIn);
 					bestCandOut.setIndex(candOut);
 					bestCandIn.setDeltaCost(deltaCost);
@@ -249,12 +247,10 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 			 */
 			for (Integer c : CL) {
 				Double deltaCost = ObjFunction.evaluateInsertionCost(c, currentSol);
-				if(ObjFunction.validateInsertion(c, currentSol)) {
-					if (deltaCost < minCost)
-						minCost = deltaCost;
-					if (deltaCost > maxCost)
-						maxCost = deltaCost;
-				}
+				if (deltaCost < minCost)
+					minCost = deltaCost;
+				if (deltaCost > maxCost)
+					maxCost = deltaCost;
 			}
 
 			/*
@@ -263,7 +259,7 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 			 */
 			for (Integer c : CL) {
 				Double deltaCost = ObjFunction.evaluateInsertionCost(c, currentSol);
-				if (deltaCost <= minCost + alpha * (maxCost - minCost) && ObjFunction.validateInsertion(c, currentSol)) {
+				if (deltaCost <= minCost + alpha * (maxCost - minCost)) {
 					RCL.add(c);
 				}
 			}
@@ -325,12 +321,10 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 			 */
 			for (Integer c : CL) {
 				Double deltaCost = ObjFunction.evaluateInsertionCost(c, currentSol);
-				if(ObjFunction.validateInsertion(c, currentSol)) {
-					if (deltaCost < minCost)
-						minCost = deltaCost;
-					if (deltaCost > maxCost)
-						maxCost = deltaCost;
-				}
+				if (deltaCost < minCost)
+					minCost = deltaCost;
+				if (deltaCost > maxCost)
+					maxCost = deltaCost;
 			}
 
 			/*
@@ -339,7 +333,7 @@ public class GRASP_PAP extends AbstractGRASP<Integer> {
 			 */
 			for (Integer c : CL) {
 				Double deltaCost = ObjFunction.evaluateInsertionCost(c, currentSol);
-				if (deltaCost <= minCost + alpha * (maxCost - minCost) && ObjFunction.validateInsertion(c, currentSol)) {
+				if (deltaCost <= minCost + alpha * (maxCost - minCost)) {
 					RCL.add(c);
 				}
 			}

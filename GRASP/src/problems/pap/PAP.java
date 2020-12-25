@@ -155,7 +155,8 @@ public class PAP implements Evaluator<Integer> {
 	 */
 	@Override
 	public Double evaluate(Solution<Integer> sol) {
-
+		if (!validate(sol))
+			return Double.MAX_VALUE;
 		setVariables(sol);
 		return sol.cost = evaluatePAP();
 
@@ -193,7 +194,8 @@ public class PAP implements Evaluator<Integer> {
 	 */
 	@Override
 	public Double evaluateInsertionCost(Integer elem, Solution<Integer> sol) {
-
+		if (!validate(sol))
+			return Double.MAX_VALUE;
 		setVariables(sol);
 		return evaluateInsertionPAP(elem);
 
@@ -224,7 +226,8 @@ public class PAP implements Evaluator<Integer> {
 	 */
 	@Override
 	public Double evaluateRemovalCost(Integer elem, Solution<Integer> sol) {
-
+		if (!validate(sol))
+			return Double.MAX_VALUE;
 		setVariables(sol);
 		return evaluateRemovalPAP(elem);
 
@@ -256,7 +259,8 @@ public class PAP implements Evaluator<Integer> {
 	 */
 	@Override
 	public Double evaluateExchangeCost(Integer elemIn, Integer elemOut, Solution<Integer> sol) {
-
+		if (!validate(sol))
+			return Double.MAX_VALUE;
 		setVariables(sol);
 		return evaluateExchangePAP(elemIn, elemOut);
 
@@ -348,6 +352,7 @@ public class PAP implements Evaluator<Integer> {
 		}
 
 		int p = values.get("P");
+		int d = values.get("D");
 		int t = values.get("T");
 
 		//HD
@@ -378,7 +383,7 @@ public class PAP implements Evaluator<Integer> {
 			}
 		}
 
-		return p;
+		return p*d*t;
 
 	}
 
