@@ -162,8 +162,8 @@ public class PAP implements Evaluator<Triple> {
 	 * {@inheritDoc} In the case of a PAP, the evaluation correspond to
 	 * computing a matrix multiplication x'.A.x. A better way to evaluate this
 	 * function when at most two variables are modified is given by methods
-	 * {@link #evaluateInsertionPAP(int)}, {@link #evaluateRemovalPAP(int)} and
-	 * {@link #evaluateExchangePAP(int,int)}.
+	 * {@link #evaluateInsertionPAP(Triple)}, {@link #evaluateRemovalPAP(Triple)} and
+	 * {@link #evaluateExchangePAP(Triple,Triple)}.
 	 * 
 	 * @return The evaluation of the PAP.
 	 */
@@ -218,7 +218,7 @@ public class PAP implements Evaluator<Triple> {
 	 * Determines the contribution to the PAP objective function from the
 	 * insertion of an element.
 	 * 
-	 * @param i
+	 * @param triple
 	 *            Index of the element being inserted into the solution.
 	 * @return The variation of the objective function resulting from the
 	 *         insertion.
@@ -249,7 +249,7 @@ public class PAP implements Evaluator<Triple> {
 	 * Determines the contribution to the PAP objective function from the
 	 * removal of an element.
 	 * 
-	 * @param i
+	 * @param triple
 	 *            Index of the element being removed from the solution.
 	 * @return The variation of the objective function resulting from the
 	 *         removal.
@@ -293,8 +293,7 @@ public class PAP implements Evaluator<Triple> {
 	public Double evaluateExchangePAP(Triple in, Triple out) {
         Double sum = 0.0;
 
-		//TODO: implement equal method on Triple?
-		if (in == out)
+		if (in.equals(out))
 			return 0.0;
 		if (variables[in.getP()][in.getD()][in.getT()] == 1)
 			return evaluateRemovalPAP(out);
@@ -312,11 +311,11 @@ public class PAP implements Evaluator<Triple> {
 	 * insertion of an element. This method is faster than evaluating the whole
 	 * solution, since it uses the fact that only one line and one column from
 	 * matrix A needs to be evaluated when inserting a new element into the
-	 * solution. This method is different from {@link #evaluateInsertionPAP(int)},
+	 * solution. This method is different from {@link #evaluateInsertionPAP(Triple)},
 	 * since it disregards the fact that the element might already be in the
 	 * solution.
 	 * 
-	 * @param i
+	 * @param triple
 	 *            index of the element being inserted into the solution.
 	 * @return the variation of the objective function resulting from the
 	 *         insertion.

@@ -28,5 +28,14 @@ public class Triple {
     public void setT(Integer t) {
         this.t = t;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof Triple){
+            return this.p.equals(((Triple) obj).getP()) && this.d.equals(((Triple) obj).getD()) && this.t.equals(((Triple) obj).getT());
+        }
+        else
+            return false;
+    }
     
 }
