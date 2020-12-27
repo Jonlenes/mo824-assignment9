@@ -229,7 +229,8 @@ public class GRASP_PAP extends AbstractGRASP<Triple> {
 
 		Integer[] disp = ObjFunction.getRpt(inCand.getP());
 		//Create a copy of the rooms so it only gets updated if all periods of this subject can be properly allocated
-		int[] roomCopy = roomAvailability;
+		int[] roomCopy = roomAvailability.clone();
+		ArrayList<Integer> assignedPeriods = new ArrayList<Integer>();
 
 		for (int i=0; i<disp.length; i++) {
 			//All periods assigned
@@ -244,13 +245,17 @@ public class GRASP_PAP extends AbstractGRASP<Triple> {
 				} else if (roomCopy[i] > 0) {
 					//Assign the professor to teach the class on this period, if there is an available room
 					inCand.setT(inCand.getT()-1);
+					assignedPeriods.add(new Integer(i));
 					--roomCopy[i];
 				}
 			}
 		}
 
 		if(inCand.getT() == 0){
-			currentSol.add(inCand);
+			for (int classPeriod:assignedPeriods) {
+				Triple cand = new Triple(inCand.getP(), inCand.getD(), classPeriod);
+				currentSol.add(cand);
+			}
 			roomAvailability = roomCopy;
 			ObjFunction.evaluate(currentSol);
 		}
