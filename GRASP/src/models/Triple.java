@@ -37,5 +37,9 @@ public class Triple {
         else
             return false;
     }
-    
+
+    @Override
+    public String toString() {
+        return "(" + this.getP().toString() + "," + this.getD().toString() + "," + this.getT().toString() + ")";
+    }
 }
