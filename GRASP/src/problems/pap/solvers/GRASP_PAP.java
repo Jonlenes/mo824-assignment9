@@ -2,6 +2,7 @@ package problems.pap.solvers;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import metaheuristics.grasp.AbstractGRASP;
@@ -16,12 +17,15 @@ import solutions.Solution;
 public class GRASP_PAP extends AbstractGRASP<Triple> {
 
 	private LocalSearchType localSearchType;
+
+	private int[] roomAvailability;
 	
 	public GRASP_PAP(Double alpha, Integer iterations, String filename, LocalSearchType localSearchType, 
 			ConstructiveHeuristicType constructionType) throws IOException {
 		super(new PAP_Inverse(filename), alpha, iterations);
 		this.localSearchType = localSearchType;
-		
+		roomAvailability = new int[ObjFunction.getValue("T")];
+		Arrays.fill(roomAvailability, ObjFunction.getValue("S"));
 	}
 
 	@Override
@@ -62,7 +66,6 @@ public class GRASP_PAP extends AbstractGRASP<Triple> {
 		for (int j = CL.size() - 1; j >= i; --j)
 			CL.remove(CL.get(j));
 		*/
-		
 	}
 
 	@Override
@@ -127,7 +130,7 @@ public class GRASP_PAP extends AbstractGRASP<Triple> {
 		return new Candidate[] {bestCandIn, bestCandOut};
 	}
 	
-	private void updateCurrentSoluction(Candidate bestCandIn, Candidate bestCandOut) {
+	private void updateCurrentSolution(Candidate bestCandIn, Candidate bestCandOut) {
 		Double minDeltaCost = Math.min(bestCandIn.getDeltaCost(), bestCandOut.getDeltaCost());
 		if (minDeltaCost < -Double.MIN_VALUE) {
 			if (bestCandOut.getTriple() != null) {
@@ -171,7 +174,7 @@ public class GRASP_PAP extends AbstractGRASP<Triple> {
 			minDeltaCost = bestCandIn.getDeltaCost();
 		}
 		
-		updateCurrentSoluction(bestCandIn, bestCandOut);
+		updateCurrentSolution(bestCandIn, bestCandOut);
 		
 		return null;
 	}
@@ -208,7 +211,7 @@ public class GRASP_PAP extends AbstractGRASP<Triple> {
 				minDeltaCost = bestCandIn.getDeltaCost();
 			}
 			
-			updateCurrentSoluction(bestCandIn, bestCandOut);
+			updateCurrentSolution(bestCandIn, bestCandOut);
 			
 		} while (minDeltaCost < -Double.MIN_VALUE);
 
@@ -225,10 +228,46 @@ public class GRASP_PAP extends AbstractGRASP<Triple> {
 		int rndIndex = rng.nextInt(candidates.size());
 		Triple inCand = candidates.get(rndIndex);
 		CL.remove(inCand);
-		// TODO: To add inCand to the solution it's need to select one available time for all needed periods
-		// Otherwise, it will never pass on validate
-		currentSol.add(inCand);
-		ObjFunction.evaluate(currentSol);
+
+		int otherClassesPeriods = 0;
+		for (Triple sol:currentSol) {
+
+			//Guarantee that the subject is not already being teached by other professor
+			if (sol.getD().equals(inCand.getD()))
+				return;
+
+			//Count other classes periods
+			if (sol.getP().equals(inCand.getP()))
+				otherClassesPeriods += sol.getT();
+		}
+
+		Integer[] disp = ObjFunction.getRpt(inCand.getP());
+		//Create a copy of the rooms so it only gets updated if all periods of this subject can be properly allocated
+		int[] roomCopy = roomAvailability;
+
+		for (int i=0; i<disp.length; i++) {
+			//All periods assigned
+			if (inCand.getT() == 0)
+				break;
+
+			//Check if the professor is available on the period
+			if (disp[i] == 1) {
+				//Check if the professor is not already assigned on the period for other classes
+				if (otherClassesPeriods > 0) {
+					--otherClassesPeriods;
+				} else if (roomCopy[i] > 0) {
+					//Assign the professor to teach the class on this period, if there is an available room
+					inCand.setT(inCand.getT()-1);
+					--roomCopy[i];
+				}
+			}
+		}
+
+		if(inCand.getT() == 0){
+			currentSol.add(inCand);
+			roomAvailability = roomCopy;
+			ObjFunction.evaluate(currentSol);
+		}
 	}
 	
 	public Solution<Triple> defaultConstructiveHeuristic() {
@@ -268,7 +307,7 @@ public class GRASP_PAP extends AbstractGRASP<Triple> {
 			if (RCL.isEmpty()) {
 				break;
 			}
-			
+
 			/* Choose a candidate randomly from the RCL */
 			chooseCandidateRandomly(RCL);
 			RCL.clear();

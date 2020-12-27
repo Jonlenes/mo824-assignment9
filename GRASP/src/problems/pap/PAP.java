@@ -426,4 +426,9 @@ public class PAP implements Evaluator<Triple> {
 	public Integer getHd(int d) {
 		return hd[d];
 	}
+
+	@Override
+	public Integer[] getRpt(int p){
+		return rpt[p];
+	}
 }

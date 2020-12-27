@@ -81,4 +81,6 @@ public interface Evaluator<E> {
 
 	public abstract Integer getHd(int d);
 
+	public abstract Integer[] getRpt(int p);
+
 }
