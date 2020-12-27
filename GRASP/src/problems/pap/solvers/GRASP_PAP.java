@@ -51,21 +51,7 @@ public class GRASP_PAP extends AbstractGRASP<Triple> {
 
 	@Override
 	public void updateCL() {
-		// Update class location (S)
-		/*
-		Integer S = ObjFunction.getValue("S");
-		Integer T = ObjFunction.getValue("T");
-		int i = 0, t = 0, countRooms = 0;
-		for (; i < CL.size(); ++i) {
-			CL.get(i).setT(t);
-			countRooms++;
-			// Check for max rooms allocations
-			if (countRooms == S) t++;
-			if (t > T) break;
-		}
-		for (int j = CL.size() - 1; j >= i; --j)
-			CL.remove(CL.get(j));
-		*/
+		return;
 	}
 
 	@Override
