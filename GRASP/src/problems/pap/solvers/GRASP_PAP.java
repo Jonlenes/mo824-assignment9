@@ -10,7 +10,7 @@ import models.ConstructiveHeuristicType;
 import models.LocalSearchType;
 import models.Triple;
 import models.Candidate;
-import problems.pap.PAP_Inverse;
+import problems.pap.PAP;
 import solutions.Solution;
 
 
@@ -22,7 +22,7 @@ public class GRASP_PAP extends AbstractGRASP<Triple> {
 	
 	public GRASP_PAP(Double alpha, Integer iterations, String filename, LocalSearchType localSearchType, 
 			ConstructiveHeuristicType constructionType) throws IOException {
-		super(new PAP_Inverse(filename), alpha, iterations);
+		super(new PAP(filename), alpha, iterations);
 		this.localSearchType = localSearchType;
 		roomAvailability = new int[ObjFunction.getValue("T")];
 		Arrays.fill(roomAvailability, ObjFunction.getValue("S"));
@@ -57,7 +57,7 @@ public class GRASP_PAP extends AbstractGRASP<Triple> {
 	@Override
 	public Solution<Triple> createEmptySol() {
 		Solution<Triple> sol = new Solution<Triple>();
-		sol.cost = 0.0;
+		sol.cost = Double.NEGATIVE_INFINITY;
 		return sol;
 	}
 

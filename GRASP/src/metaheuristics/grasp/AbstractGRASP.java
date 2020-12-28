@@ -229,7 +229,7 @@ public abstract class AbstractGRASP<E> {
 		for (int i = 0; i < iterations; i++) {
 			constructiveHeuristic();
 			localSearch();
-			if (incumbentSol.cost > currentSol.cost) {
+			if (incumbentSol.cost < currentSol.cost) {
 				incumbentSol = new Solution<E>(currentSol);
 				if (verbose)
 					System.out.println("(Iter. " + i + ") BestSol = " + incumbentSol);
