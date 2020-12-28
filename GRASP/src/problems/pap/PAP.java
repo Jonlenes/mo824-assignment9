@@ -192,7 +192,7 @@ public class PAP implements Evaluator<Triple> {
 		Double cost = 0.0;
 		for (int i = 0; i < values.get("D"); ++i) {
 			if (courses[i] != -1)
-				cost += apd[i][courses[i]];
+				cost += apd[courses[i]][i];
 			else
 				cost -= 100;
 		}
@@ -366,8 +366,8 @@ public class PAP implements Evaluator<Triple> {
 
 		//HD
 		stok.nextToken();
-		hd = new Integer[p];
-		for(int i = 0; i < values.get("P"); i++){
+		hd = new Integer[d];
+		for(int i = 0; i < values.get("D"); i++){
 			stok.nextToken();
 			hd[i] = (int)stok.nval;
 		}
